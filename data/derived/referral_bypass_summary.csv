@@ -1,0 +1,16 @@
+metric,value
+referral_rows,5448.0
+booking_rows,5275.0
+unique_referral_leads,1000.0
+unique_booking_leads,701.0
+bookings_with_any_prior_referral,20.0
+honored_referral_bookings_with_prior_referral,16.0
+suspected_referral_bypass_bookings,4.0
+suspected_bypass_leads,4.0
+suspected_bypass_total_agreement_value,18161111.0
+same_enquiry_attribution_anomaly_rows,28.0
+same_enquiry_attribution_anomaly_leads,7.0
+overlapping_leads_between_two_diagnostics,1.0
+overlapping_referral_enquiry_ids_between_two_diagnostics,0.0
+strict_booking_or_enquiry_overlaps_between_two_diagnostics,0.0
+combined_unique_leads_across_two_diagnostics,10.0

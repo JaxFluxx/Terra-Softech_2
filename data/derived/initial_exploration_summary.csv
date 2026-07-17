@@ -1,0 +1,7 @@
+observation,value
+Referral rows,5448
+Booking rows,5275
+Leads with more than one referral,29
+Leads with more than one booking,14
+Own referral enquiry booked but not marked REFERRAL,28
+Bookings matched to latest prior referral but not marked REFERRAL,4

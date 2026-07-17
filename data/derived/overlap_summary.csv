@@ -1,0 +1,8 @@
+metric,value,interpretation
+suspected_booking_level_bypass_cases,4,Booking-centric suspected bypass cases.
+same_enquiry_attribution_anomalies,28,Referral-enquiry-level attribution anomalies.
+overlapping_leads,1,Leads appearing in both diagnostic views.
+overlapping_referral_enquiry_ids,0,Same referral enquiry IDs appearing in both views.
+strict_booking_or_enquiry_overlaps,0,Strict booking/enquiry identifier overlaps across both views.
+combined_unique_leads_across_two_diagnostics,10,Unique leads affected across both diagnostic views after lead-level deduplication.
+current_overlap_interpretation,Partially overlapping at lead level only; no strict referral enquiry or booking/enquiry ID overlap was found.,Current reporting classification for the 4 and 28 findings.
