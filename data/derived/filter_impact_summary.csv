@@ -1,0 +1,6 @@
+metric,before_filter,after_filter,removed
+Referral rows,5448,4585,863
+Booking rows,5275,4713,562
+Bookings with eligible prior referral,20,12,8
+Honored under strict rule,16,8,8
+Possible bypass records,4,4,0

@@ -1,7 +1,14 @@
-observation,value
-Referral rows,5448
-Booking rows,5275
-Leads with more than one referral,29
-Leads with more than one booking,14
-Own referral enquiry booked but not marked REFERRAL,28
-Bookings matched to latest prior referral but not marked REFERRAL,4
+section,metric,value
+table_profile,Referral submissions,5448
+table_profile,Bookings,5275
+multiplicity,Unique referral leads,1000
+multiplicity,Unique booking leads,701
+multiplicity,Leads in both tables,595
+multiplicity,Leads with multiple referrals,29
+multiplicity,Leads with multiple bookings,14
+chronology,Same-enquiry booking rows,2762
+chronology,Time-valid same-enquiry rows,16
+chronology,Reverse-time same-enquiry rows,2746
+chronology,Source-disagreement rows,28
+chronology,Source disagreement and reverse time,28
+chronology,Time-valid source disagreement,0

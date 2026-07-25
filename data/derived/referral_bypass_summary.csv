@@ -1,16 +1,19 @@
-metric,value
-referral_rows,5448.0
-booking_rows,5275.0
-unique_referral_leads,1000.0
-unique_booking_leads,701.0
-bookings_with_any_prior_referral,20.0
-honored_referral_bookings_with_prior_referral,16.0
-suspected_referral_bypass_bookings,4.0
-suspected_bypass_leads,4.0
-suspected_bypass_total_agreement_value,18161111.0
-same_enquiry_attribution_anomaly_rows,28.0
-same_enquiry_attribution_anomaly_leads,7.0
-overlapping_leads_between_two_diagnostics,1.0
-overlapping_referral_enquiry_ids_between_two_diagnostics,0.0
-strict_booking_or_enquiry_overlaps_between_two_diagnostics,0.0
-combined_unique_leads_across_two_diagnostics,10.0
+metric,value,interpretation
+raw_referral_rows,5448,Raw referral-enquiry records.
+raw_booking_rows,5275,Raw non-canceled booking records.
+test_demo_referral_rows_removed,863,Referral rows excluded by the explicit test/demo name filter.
+test_demo_booking_rows_removed,562,Booking rows excluded by the explicit test/demo name filter.
+filtered_referral_rows,4585,Referral rows used for primary matching.
+filtered_booking_rows,4713,Booking rows used for primary matching.
+primary_bookings_with_prior_referral,12,Filtered bookings with an exact-lead prior referral.
+primary_honored_strict,8,Primary matches honored under the strict booking-source rule.
+primary_possible_bypass,4,Primary records requiring bypass review.
+primary_tier_a,0,Unambiguous primary review records.
+primary_tier_b,4,Ambiguous primary review records.
+same_enquiry_linked_booking_rows,2762,Referral rows with a same-enquiry booking reference.
+same_enquiry_reverse_time_rows,2746,Same-enquiry booking date precedes referral submission.
+reverse_time_source_disagreement_rows,28,Previous 28 findings reclassified as data integrity.
+same_enquiry_time_valid_rows,16,Same-enquiry records eligible for attribution review.
+same_enquiry_time_valid_strict_unhonored,0,Time-valid same-enquiry records not marked REFERRAL on booking source.
+secondary_identity_review_rows,3,Tier C exact encrypted-identity matches outside primary route.
+secondary_identity_possible_bypass,3,Tier C records requiring identity confirmation.

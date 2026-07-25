@@ -1,0 +1,11 @@
+cohort,attribution_window,matched_bookings,honored_bookings,possible_bypass_bookings
+Before test/demo filter,30 days,16,12,4
+Before test/demo filter,60 days,16,12,4
+Before test/demo filter,90 days,19,15,4
+Before test/demo filter,180 days,20,16,4
+Before test/demo filter,No limit,20,16,4
+After test/demo filter,30 days,11,7,4
+After test/demo filter,60 days,11,7,4
+After test/demo filter,90 days,12,8,4
+After test/demo filter,180 days,12,8,4
+After test/demo filter,No limit,12,8,4
