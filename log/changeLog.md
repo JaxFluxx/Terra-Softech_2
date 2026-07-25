@@ -50,6 +50,8 @@ Current result:
 
 - Kept only active source data, reproducible notebooks, generated evidence, the formal report, and this change log.
 - Moved checkpoints, personal walkthrough notes, AI memory notes, the previous change log, and the temporary rule-review notebook outside the project.
+- Replaced the 29-column Tier B and 23-column Tier C exports with compact review tables containing only the decision-relevant fields and a record-level `review_reason`.
+- Removed the redundant `initial_exploration_summary.csv` and `same_enquiry_time_valid_cases.csv` exports. Their results remain visible and validated inside the notebooks.
 - Archive location:
 
   `/Users/jia/Desktop/工作/Terra Softech/Terra_Softech_2_archive_20260725`
@@ -106,16 +108,14 @@ Terra Softech_2/
 │   │   ├── booking_extracts.csv
 │   │   └── dataset_guide.md
 │   └── derived/
-│       ├── initial_exploration_summary.csv
 │       ├── data_quality_summary.csv
 │       ├── filter_impact_summary.csv
 │       ├── referral_bypass_summary.csv
-│       ├── booking_priority_review_cases.csv
+│       ├── tier_b_review_cases.csv
 │       ├── same_enquiry_time_quality_summary.csv
-│       ├── same_enquiry_time_valid_cases.csv
 │       ├── reverse_time_data_integrity_cases.csv
 │       ├── attribution_sensitivity_summary.csv
-│       └── identity_match_review_cases.csv
+│       └── tier_c_review_cases.csv
 └── log/
     ├── referralBypass_report.md
     └── changeLog.md

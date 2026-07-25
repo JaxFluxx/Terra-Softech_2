@@ -41,7 +41,7 @@ The primary route starts from each booking, finds an earlier referral for the sa
 - **Tier A:** 0 records.
 - **Tier B:** 4 records for manual attribution review.
 
-The review list is in [`booking_priority_review_cases.csv`](../data/derived/booking_priority_review_cases.csv).
+The review list is in [`tier_b_review_cases.csv`](../data/derived/tier_b_review_cases.csv).
 
 ## Same-Enquiry Time Check
 
@@ -60,13 +60,13 @@ The 28 `CHANNEL_PARTNER` rows are kept in [`reverse_time_data_integrity_cases.cs
 - **Attribution windows:** the primary possible-bypass count remains 4 under 30, 60, 90, and 180 days.
 - **Encrypted identity fallback:** exact encrypted mobile matching finds 3 additional possible records outside the exact lead-ID route. All remain **Tier C** until identity and lead ownership are confirmed.
 
-Tier C records are listed in [`identity_match_review_cases.csv`](../data/derived/identity_match_review_cases.csv) and are not included in the primary count of 4.
+Tier C records are listed in [`tier_c_review_cases.csv`](../data/derived/tier_c_review_cases.csv) and are not included in the primary count of 4.
 
 ## Review Files
 
-1. Review the 4 Tier B bookings in [`booking_priority_review_cases.csv`](../data/derived/booking_priority_review_cases.csv).
+1. Review the 4 Tier B bookings in [`tier_b_review_cases.csv`](../data/derived/tier_b_review_cases.csv).
 2. Review the 28 reverse-time records in [`reverse_time_data_integrity_cases.csv`](../data/derived/reverse_time_data_integrity_cases.csv) as timestamp or extract-quality issues.
-3. Confirm the 3 Tier C records in [`identity_match_review_cases.csv`](../data/derived/identity_match_review_cases.csv) before adding them to the primary list.
+3. Confirm the 3 Tier C records in [`tier_c_review_cases.csv`](../data/derived/tier_c_review_cases.csv) before adding them to the primary list.
 
 ## Boundaries
 
