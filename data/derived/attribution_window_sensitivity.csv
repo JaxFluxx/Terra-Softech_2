@@ -1,0 +1,6 @@
+cohort,attribution_window,window_days,matched_bookings,strict_honored_bookings,primary_review_candidates
+After test/demo filter,30 days,30,11,7,4
+After test/demo filter,60 days,60,11,7,4
+After test/demo filter,90 days,90,12,8,4
+After test/demo filter,180 days,180,12,8,4
+After test/demo filter,No limit,,12,8,4

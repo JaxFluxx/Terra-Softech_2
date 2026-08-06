@@ -1,0 +1,8 @@
+cohort,booking_source_norm,booking_count,share
+All filtered bookings,<NULL>,544,0.115425419054
+All filtered bookings,CHANNEL_PARTNER,1907,0.404625503925
+All filtered bookings,DIRECT,24,0.00509229789943
+All filtered bookings,REFERRAL,2238,0.474856779122
+Bookings with time-valid prior referral,<NULL>,1,0.0833333333333
+Bookings with time-valid prior referral,CHANNEL_PARTNER,3,0.25
+Bookings with time-valid prior referral,REFERRAL,8,0.666666666667

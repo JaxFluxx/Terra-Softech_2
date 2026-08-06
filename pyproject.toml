@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "referral-attribution"
+version = "0.1.0"
+description = "Auditable referral attribution analytics pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.2,<4",
+    "numpy>=1.26,<3",
+    "matplotlib>=3.8,<4",
+    "seaborn>=0.13,<1",
+    "jupyter>=1,<2",
+    "nbconvert>=7,<8",
+    "nbformat>=5,<6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<9",
+]
+
+[project.scripts]
+referral-attribution = "referral_attribution.pipeline:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q --import-mode=importlib"
+pythonpath = ["src"]
+testpaths = ["tests"]

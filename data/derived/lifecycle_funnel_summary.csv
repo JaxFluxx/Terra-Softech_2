@@ -1,0 +1,8 @@
+stage_order,stage,grain,count,denominator,denominator_count,rate,included_in_primary_funnel
+1,Referral submissions after test/demo filtering,Referral enquiry,4585,Filtered referral submissions,4585,1.0,True
+2,Referral submissions sharing Exact client + lead_id with a booking,Referral enquiry,3149,Filtered referral submissions,4585,0.6868047982551799,True
+3,Bookings sharing Exact client + lead_id with a referral submission,Booking,4062,Filtered bookings,4713,0.8618714194780395,True
+4,Bookings with at least one time-valid prior referral,Booking,12,Bookings sharing Exact client + lead_id,4062,0.0029542097488921715,True
+5,Honored bookings: Booking source recorded as REFERRAL,Booking,8,Bookings with time-valid prior referral,12,0.6666666666666666,True
+6,Primary review candidates,Booking,4,Bookings with time-valid prior referral,12,0.3333333333333333,True
+7,Reverse-time source disagreements (outside funnel),Referral enquiry,28,Not a bypass denominator,,,False

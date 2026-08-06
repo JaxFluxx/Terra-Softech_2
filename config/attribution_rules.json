@@ -1,0 +1,107 @@
+{
+  "version": 2,
+  "identity": {
+    "primary_route": {
+      "booking_fields": [
+        "client_name",
+        "booking_lead_id"
+      ],
+      "referral_fields": [
+        "client_name",
+        "referral_lead_id"
+      ],
+      "label": "Exact client + lead_id"
+    },
+    "secondary_routes": [
+      {
+        "name": "Exact encrypted mobile",
+        "referral_key": "referral_mobile_key",
+        "booking_key": "booking_mobile_key"
+      },
+      {
+        "name": "Exact encrypted email",
+        "referral_key": "referral_email_key",
+        "booking_key": "booking_email_key"
+      }
+    ],
+    "secondary_route_changes_primary_count": false
+  },
+  "time": {
+    "referral_field": "referral_submitted_on",
+    "booking_fallback_order": [
+      "booking_date_at",
+      "booking_created_at"
+    ],
+    "allow_referral_on_booking_date": true,
+    "latest_prior_referral": true,
+    "attribution_windows_days": [
+      30,
+      60,
+      90,
+      180
+    ],
+    "primary_window_days": null,
+    "reverse_time_class": "Data Integrity - Reverse Time"
+  },
+  "honored": {
+    "primary_mode": "strict",
+    "strict": {
+      "normalized_field": "booking_source_norm",
+      "accepted_values": [
+        "REFERRAL"
+      ],
+      "label": "Booking source recorded as REFERRAL"
+    }
+  },
+  "filters": {
+    "test_demo_enabled": true,
+    "test_demo_name_fields": {
+      "referrals": [
+        "lead_name",
+        "referrer_name"
+      ],
+      "bookings": [
+        "lead_name"
+      ]
+    },
+    "test_demo_pattern": "\\b(?:test|demo|dummy|sample|training|internal)\\b|(?:^|[\\s_-])test[a-z0-9_-]*"
+  },
+  "classification": {
+    "tier_a": {
+      "requires_single_referrer": true,
+      "requires_no_timeline_ambiguity": true,
+      "label": "Tier A - Strong attribution review"
+    },
+    "tier_b": {
+      "trigger_any": [
+        "multiple_referrer",
+        "timeline_ambiguity"
+      ],
+      "label": "Tier B - Ambiguous attribution review"
+    },
+    "tier_c": {
+      "identity_confirmation_required": true,
+      "label": "Tier C - Secondary identity review"
+    },
+    "primary_case_class": "Primary attribution review",
+    "secondary_case_class": "Secondary identity review",
+    "reverse_time_case_class": "Reverse-time data integrity",
+    "ops_priorities": {
+      "reverse_time": {
+        "label": "P0 - Repair chronology",
+        "order": 0
+      },
+      "primary_review": {
+        "label": "P1 - Verify attribution",
+        "order": 1
+      },
+      "secondary_review": {
+        "label": "P2 - Confirm identity",
+        "order": 2
+      }
+    }
+  },
+  "outputs": {
+    "directory": "data/derived"
+  }
+}

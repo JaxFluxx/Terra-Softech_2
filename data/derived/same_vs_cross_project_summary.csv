@@ -1,0 +1,3 @@
+project_relationship,matched_bookings,strict_honored_bookings,primary_review_candidates,share_of_eligible_bookings
+Cross project,1,1,0,0.0833333333333
+Same project,11,7,4,0.916666666667
