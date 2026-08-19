@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "identity": {
     "primary_route": {
       "booking_fields": [
@@ -64,7 +64,36 @@
         "lead_name"
       ]
     },
-    "test_demo_pattern": "\\b(?:test|demo|dummy|sample|training|internal)\\b|(?:^|[\\s_-])test[a-z0-9_-]*"
+    "test_demo_pattern": "\\b(?:test|demo|dummy|sample|training|internal)\\b|(?:^|[\\s_-])test[a-z0-9_-]*",
+    "strong_test_demo_enabled": false,
+    "strong_test_demo_signals": {
+      "referrals": [],
+      "bookings": [
+        {
+          "field": "booking_crm_id",
+          "match": "regex",
+          "pattern": "^DEMO-",
+          "label": "Booking CRM ID starts with DEMO-"
+        },
+        {
+          "field": "booking_unit_number",
+          "match": "exact",
+          "values": [
+            "TEST"
+          ],
+          "label": "Unit number equals TEST"
+        }
+      ]
+    }
+  },
+  "quality": {
+    "value_sanity": {
+      "repeated_digit_min_length": 6,
+      "missing_label": "Not available",
+      "non_positive_label": "Non-positive value",
+      "repeated_digit_label": "Repeated-digit pattern",
+      "positive_label": "Positive contextual value"
+    }
   },
   "classification": {
     "tier_a": {
@@ -100,6 +129,114 @@
         "order": 2
       }
     }
+  },
+  "process": {
+    "sensitivity_windows_days": [
+      30,
+      60,
+      90,
+      180
+    ],
+    "multi_referrer": {
+      "recommended_policy_id": "P-MANUAL",
+      "manual_referrer_threshold": 2,
+      "policies": [
+        {
+          "policy_id": "P-LAST",
+          "label": "Latest prior referrer owns",
+          "mode": "latest",
+          "notes": "Detection reference only; does not prove ownership."
+        },
+        {
+          "policy_id": "P-FIRST",
+          "label": "First prior referrer owns",
+          "mode": "first",
+          "notes": "Alternative chronology rule; does not prove ownership."
+        },
+        {
+          "policy_id": "P-MANUAL",
+          "label": "Manual review for multiple prior referrers",
+          "mode": "manual_when_multiple",
+          "notes": "Recommended 90-day provisional policy."
+        },
+        {
+          "policy_id": "P-SAME-PROJECT-LAST",
+          "label": "Latest same-project referrer owns",
+          "mode": "same_project_latest",
+          "notes": "Same project is a helpful signal, not proof of ownership."
+        }
+      ]
+    },
+    "booking_warning": {
+      "window_days": 30,
+      "prior_referrer_display_cap": 5,
+      "event_name": "booking_referral_history_warning",
+      "event_version": "1.0",
+      "trigger_when_source_not_in": [
+        "REFERRAL"
+      ],
+      "single_same_project_action": "Soft warning + show owner candidate",
+      "multiple_same_project_action": "Soft warning + required override reason + manual review",
+      "cross_project_only_action": "Low-severity warning + event log; no automatic payout",
+      "no_prior_referral_action": "No warning",
+      "phase_2_action": "Consider a hard stop only after pilot evidence supports it",
+      "event_fields": [
+        "event_name",
+        "event_version",
+        "booking_id",
+        "user_id",
+        "booking_source_proposed",
+        "referral_history_snapshot",
+        "policy_id",
+        "warning_shown",
+        "warning_severity",
+        "override_reason_code",
+        "override_reason_free_text",
+        "prior_referrer_count",
+        "window_days",
+        "decision",
+        "timestamp"
+      ]
+    }
+  },
+  "regression": {
+    "accepted_week5_baseline": {
+      "metrics": {
+        "eligible_bookings": 12,
+        "strict_honored": 8,
+        "primary_review": 4,
+        "tier_a": 0,
+        "tier_b": 4,
+        "tier_c": 3,
+        "reverse_time_source_disagreement": 28,
+        "time_valid_same_enquiry_strict_unhonored": 0
+      },
+      "primary_review_booking_ids": [
+        "1206",
+        "935",
+        "3331",
+        "4913"
+      ]
+    },
+    "strong_signal_sensitivity": {
+      "metrics": {
+        "eligible_bookings": 11,
+        "strict_honored": 7,
+        "primary_review": 4,
+        "tier_a": 0,
+        "tier_b": 4,
+        "tier_c": 3,
+        "reverse_time_source_disagreement": 28,
+        "time_valid_same_enquiry_strict_unhonored": 0
+      },
+      "primary_review_booking_ids": [
+        "1206",
+        "935",
+        "3331",
+        "4913"
+      ]
+    },
+    "intentional_difference": "The default package preserves the accepted Week 5 baseline. Strong test/demo signals remain visible as a data-quality sensitivity and must not change the primary funnel unless a data owner explicitly enables them. When enabled, they remove five additional booking rows and produce 11 eligible / 7 strict honored / 4 primary review; the four primary review booking IDs remain unchanged."
   },
   "outputs": {
     "directory": "data/derived"

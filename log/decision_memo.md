@@ -1,65 +1,109 @@
-# Referral Attribution: Week 5 Decision Memo
+# Referral Attribution: Week 6 Decision Memo
 
 ## 1. Situation
 
-The accepted analysis finds a small primary attribution-review queue, but a much larger chronology problem. The decision is therefore not whether the data proves referral bypass. It is how to review the current cases, prevent avoidable source overrides, and repair the evidence needed for future attribution decisions.
+The Week 5 pipeline identified a small booking-first review queue and a larger
+chronology-quality issue. Week 6 extends that work into two decisions: how to
+frame the workload honestly, and how the product should behave when a booking
+has more than one prior referrer.
 
 ## 2. Method and Assumptions
 
-- Removed explicit test/demo records: referrals `5,448 -> 4,585`; bookings `5,275 -> 4,713`.
-- Matched on exact `client + lead_id`.
-- Required `referral_submitted_on <= bookingDate`, using `booking_created_on` only when the business date is missing.
-- Selected the latest eligible prior referral.
-- Used one primary honored definition: `booking_source == "REFERRAL"`.
-- Compared 30/60/90/180-day and unlimited attribution windows as sensitivity checks.
-- Treated `agreementValue` as transaction context, not commission impact.
+- The primary route remains exact `client + lead_id`, with a referral required
+  to occur on or before the booking timeline.
+- The latest time-valid referral remains the **detection reference**. It is not
+  treated as proof of commission ownership.
+- A booking is honored only when `booking_source == REFERRAL` after source
+  normalization.
+- The default production-like base removes explicit name-pattern test/demo
+  rows. Five additional booking rows match configured CRM-ID or unit-number
+  signals and remain visible as a data-quality sensitivity.
+- The default regression contract remains `12 eligible / 8 honored / 4 review`.
+  The four review IDs are `1206`, `935`, `3331`, and `4913`. Enabling the JSON
+  strong-signal switch is a separately tested sensitivity, not the active
+  primary-funnel rule.
+- `agreementValue` is retained only as transaction context. It is never
+  presented as commission, loss, or recoverable impact.
 
 ## 3. Findings That Change the Decision
 
-- `4,062` filtered bookings share client and lead identity with at least one referral, but only `12` have a referral that occurred before the booking. This is a chronology and lifecycle-data bottleneck, not a conversion-rate conclusion.
-- Of the `12` eligible bookings, `8` are strictly honored and `4` require primary review.
-- All `4` primary cases are **Tier B** because each has multiple prior referrers; one also has a timeline ambiguity. The four booking IDs remain `1206`, `935`, `3331`, and `4913`.
-- The primary review count stays at `4` under 30-, 60-, 90-, 180-day, and unlimited windows.
-- `28` same-enquiry source disagreements are reverse-time. They belong in Data Integrity, not in the primary bypass denominator.
-- `3` exact encrypted-mobile matches form a separate Tier C identity-confirmation queue. They do not change the primary count.
+- The filtered production-like base contains `4,713` bookings. `4,062` share an
+  exact client and lead ID with a referral, but only `12` have a time-valid
+  prior referral. The large drop is a data-lifecycle finding, not a conversion
+  conclusion.
+- `8 of 12` eligible bookings are strictly honored. The remaining `4 of 12`
+  are primary review candidates: `33.3%` within the qualified referral path.
+- For routine Operations (Ops) workload planning, the same four cases equal
+  `0.85` review cases per 1,000 filtered bookings. This is the headline
+  workload metric; it is not a system-wide bypass rate.
+- All four primary cases are Tier B because each has multiple prior referrers.
+  The impact table exports the Tier B agreement-value sum, median, minimum,
+  and maximum only as transaction context. One row has a repeated-digit
+  `agreementValue` pattern (`11,111,111`), so the value needs verification
+  without removing the attribution case.
+- `28` reverse-time source disagreements remain a separate Data Integrity
+  backlog, and `3` Tier C rows remain an identity-confirmation queue. Neither
+  category enters the primary review count.
 
 ## 4. Recommendation
 
-### Ops: act this week
+### Ops: use P-MANUAL for multi-referrer ownership
 
-1. Validate the date semantics and linked-record history for the `28` reverse-time records before using them as referral-conversion evidence.
-2. Review the `4` Tier B bookings in the source CRM, focusing on which prior referrer owned the referral and whether the recorded booking source is correct.
-3. Confirm identity for the `3` Tier C records before any attribution decision.
+- For a booking with exactly one prior referrer, show the latest prior referral
+  as an owner candidate.
+- For two or more distinct prior referrers, use `P-MANUAL`: do not auto-assign
+  ownership or payout; route the case to manual review.
+- Under the unlimited batch view, `P-MANUAL` auto-handles `7` of `12` eligible
+  bookings and manually reviews `5`, including all `4` Tier B review cases.
+- Do not use first-referrer, latest-referrer, or same-project-only rules as
+  automatic commission rules. Each would auto-assign all four Tier B cases
+  despite the ownership ambiguity.
 
-The sortable queue is [`ops_review_board.csv`](../data/derived/ops_review_board.csv).
+### Product: pilot a controlled 30-day warning
 
-### Product: add one controlled workflow check
+When a user saves a booking with a source other than `REFERRAL`, look back 30
+days using the same exact identity route.
 
-Propose a **30-day referral-history warning** when a booking is about to be saved with a non-referral source:
+- No prior referral: no warning.
+- One same-project referrer: soft warning and show one owner candidate.
+- Two or more same-project referrers: soft warning, required override reason,
+  and manual review.
+- Cross-project history only: low-severity warning and event log; no automatic
+  payout.
 
-- show the latest prior referral and all prior referrers;
-- require the user to confirm the owner or record an override reason;
-- send multi-referrer cases to manual review rather than assigning automatically.
+In the historical 30-day simulation, all four baseline Tier B cases would
+receive a warning. Three retain multi-referrer escalation; one has a single
+referrer within the shorter window and receives a soft warning instead.
 
-This is a proposed operating rule, not a confirmed commission policy. The batch analysis should continue to retain the unlimited-window sensitivity view.
+Keep the unlimited view for batch sensitivity analysis. Do not introduce a hard
+stop unless pilot evidence shows that warnings improve attribution without
+creating unacceptable booking friction.
 
-### Data: repair the evidence layer
+### Data: repair the evidence needed for future decisions
 
-- Investigate why `4,050` identity-overlap bookings have only later referrals and confirm what the `booking_on_referral_*` fields represent for the `28` reverse-time links.
-- Where the system supports it, add monitored fields for event timestamp provenance, source-change history, and override reason.
-- Use the strict booking-source metric for attribution reporting and monitor enquiry/booking source disagreements separately as data-quality evidence.
+- Send the 28 reverse-time rows to data repair with timestamp provenance,
+  booking/referral source history, and override reason where available.
+- Add a value-sanity flag for keyboard-pattern or non-positive agreement values.
+  The flag prompts verification; it does not suppress a review case.
 
 ## 5. What Is Not Proven
 
-- The four primary cases are not confirmed fraud, confirmed bypass, or confirmed commission loss.
-- The rightful referrer cannot be determined from the extracts when many prior referrers exist.
-- Agreement value cannot be converted into commission impact without eligibility, rate, reversal, and payout data.
-- The test/demo filter and proposed 30-day workflow window still need business-owner confirmation.
+- The four primary cases are review candidates, not confirmed bypass, fraud,
+  commission loss, or payment liability.
+- These extracts cannot establish multi-referrer contribution or payout
+  eligibility, so they cannot justify a time-decay commission split.
+- The data cannot yet estimate financial impact without a commission rate,
+  eligibility, reversal, and payout record.
 
 ## 6. 30/60/90-Day Measurement Plan
 
 | Horizon | Leading indicator | Guardrail | Falsifier |
 |---|---|---|---|
-| 30 days | Share of non-referral bookings checked before confirmation; age of open P0/P1 cases | Booking completion time and override volume | Most warnings are validated as correct non-referral bookings or cannot identify an owner |
-| 60 days | Share of warnings resolved before booking completion; repeat reverse-time volume | Manual-review backlog and false-escalation rate | Queue volume grows without clearer date semantics or source evidence |
-| 90 days | Strict honored rate among time-valid eligible bookings; unresolved multi-referrer share | Source disagreement and missing timestamp rates | Attribution evidence does not improve after date-semantic validation and workflow checks |
+| 30 days | Warning display rate and override-reason completion | Booking completion time; missing reason rate | Most warnings are confirmed as valid non-referral bookings with no actionable owner evidence |
+| 60 days | Manual-review resolution rate; median queue age | Unresolved multi-referrer backlog; false escalations | Manual review does not improve ownership evidence or creates an unsustainable queue |
+| 90 days | Strict honored rate among eligible bookings; repeated reverse-time volume | Source disagreement rate; warning-to-review conversion | The warning changes neither recorded attribution nor data completeness |
+
+The supporting outputs are `impact_framing_summary.csv`,
+`multi_referrer_policy_sensitivity.csv`,
+`multi_referrer_policy_case_matrix.csv`, and
+`process_window_and_policy_sensitivity.csv`.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -10,6 +11,7 @@ from referral_attribution.pipeline import run_pipeline
 from referral_attribution.quality import (
     EXPECTED_PRIMARY_BOOKING_IDS,
     EXPECTED_REGRESSION,
+    EXPECTED_STRONG_SIGNAL_SENSITIVITY,
 )
 
 
@@ -80,3 +82,28 @@ def test_repeated_pipeline_execution_is_stable() -> None:
             second["tables"][filename],
             check_dtype=True,
         )
+
+
+def test_strong_signal_sensitivity_is_reproducible_when_enabled(
+    tmp_path: Path,
+) -> None:
+    custom_rules = json.loads(
+        (PROJECT_ROOT / "config" / "attribution_rules.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    custom_rules["filters"]["strong_test_demo_enabled"] = True
+    custom_config = tmp_path / "strong_signal_sensitivity_rules.json"
+    custom_config.write_text(json.dumps(custom_rules), encoding="utf-8")
+
+    result = run_pipeline(
+        project_root=PROJECT_ROOT,
+        config_path=custom_config,
+        write_outputs=False,
+        verbose=False,
+    )
+
+    assert result["regression"] == EXPECTED_STRONG_SIGNAL_SENSITIVITY
+    assert set(result["primary_review"]["booking_id"]) == (
+        EXPECTED_PRIMARY_BOOKING_IDS
+    )

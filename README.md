@@ -23,20 +23,25 @@ The outputs are review evidence. They do not prove fraud, commission eligibility
 │   ├── classification.py
 │   ├── config.py
 │   ├── funnel.py
+│   ├── impact.py
 │   ├── io.py
 │   ├── matching.py
 │   ├── pipeline.py
+│   ├── process_rules.py
 │   ├── quality.py
 │   └── run_tracking.py
 ├── tests/
 ├── code/
-│   └── 5.1_lifecycle_and_decision.ipynb
+│   ├── 5.1_lifecycle_and_decision.ipynb
+│   └── 6.1_impact_and_process.ipynb
 ├── data/
 │   ├── raw/
 │   └── derived/
 ├── log/
 │   ├── metric_dictionary.md
 │   ├── decision_memo.md
+│   ├── multi_referrer_policy_brief.md
+│   ├── process_rule_spec.md
 │   └── changeLog.md
 ├── pyproject.toml
 ├── README.md
@@ -97,12 +102,17 @@ Optional local JUnit evidence:
 python3 -m pytest --junitxml=reports/junit.xml
 ```
 
-## Execute the Week 5 Notebook
+## Execute the Notebooks
 
 ```bash
 python3 -m jupyter nbconvert \
   --to notebook --execute --inplace \
   code/5.1_lifecycle_and_decision.ipynb \
+  --ExecutePreprocessor.timeout=300
+
+python3 -m jupyter nbconvert \
+  --to notebook --execute --inplace \
+  code/6.1_impact_and_process.ipynb \
   --ExecutePreprocessor.timeout=300
 ```
 
@@ -150,12 +160,34 @@ The pipeline writes to `data/derived/`:
 - `same_vs_cross_project_summary.csv`
 - `booking_source_summary.csv`
 - `multi_referrer_summary.csv`
+- `impact_framing_summary.csv`
+- `tier_b_agreement_context.csv`
+- `multi_referrer_policy_sensitivity.csv`
+- `multi_referrer_policy_case_matrix.csv`
+- `process_window_and_policy_sensitivity.csv`
 - `ops_review_board.csv`
 
 `attribution_window_sensitivity.csv` is the Week 5 decision table for the
 filtered cohort and uses the strict booking-source definition at every window.
 `filter_base_summary.csv` and `filter_impact_summary.csv` preserve the
 before/after test-demo-filter audit required for the primary funnel.
+The Week 6 policy tables are simulations of a proposed ownership workflow;
+they do not create commission or payout decisions.
+
+## Week 6 Impact and Process Extension
+
+Week 6 keeps the Week 5 booking-first detection logic and adds:
+
+1. Explicit workload and conditional-quality metrics with denominators.
+2. Agreement-value sanity flags that preserve review rows.
+3. A multi-referrer policy comparison and booking-level case matrix.
+4. A 30-day booking warning specification with event logging.
+
+The recommended provisional policy is `P-MANUAL`: auto-show a candidate when
+one distinct prior referrer exists; require manual review at two or more.
+Read [`log/decision_memo.md`](log/decision_memo.md),
+[`log/multi_referrer_policy_brief.md`](log/multi_referrer_policy_brief.md), and
+[`log/process_rule_spec.md`](log/process_rule_spec.md) before operational use.
 
 ## Automation Boundary
 
@@ -181,7 +213,10 @@ Do not add P0 or P2 rows to the primary review count.
 ## Known Limitations
 
 - No approved maximum attribution window exists.
-- The test/demo filter is name-based.
+- The default test/demo filter uses configured name patterns. Explicit CRM-ID
+  and unit-number signals remain visible as data-quality flags and can be
+  enabled only after data-owner approval; undocumented test conventions can
+  still remain.
 - Exact encrypted mobile/email equality does not prove identity.
 - Multiple prior referrers require source-system review.
 - The extracts do not contain commission policy, rate, reversal, or payout data.

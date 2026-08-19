@@ -54,6 +54,43 @@ def has_test_demo_name(
     return combined.str.contains(pattern, case=False, regex=True, na=False)
 
 
+def has_configured_test_demo_signal(
+    table: pd.DataFrame,
+    signals: list[dict[str, Any]],
+) -> pd.Series:
+    """Flag only explicit strong test/demo signals defined in JSON."""
+    flagged = pd.Series(False, index=table.index, dtype="bool")
+    for signal in signals:
+        field = signal.get("field")
+        match_type = signal.get("match")
+        if not field or not match_type:
+            raise ValueError("Each strong test/demo signal needs field and match.")
+        if field not in table.columns:
+            raise ValueError(
+                f"Configured strong test/demo field is unavailable: {field}"
+            )
+
+        values = table[field].astype("string").fillna("").str.strip()
+        if match_type == "regex":
+            pattern = signal.get("pattern")
+            if not pattern:
+                raise ValueError(f"Regex signal for {field} is missing a pattern.")
+            matched = values.str.contains(pattern, case=False, regex=True, na=False)
+        elif match_type == "exact":
+            expected = signal.get("values", [])
+            if not expected:
+                raise ValueError(f"Exact signal for {field} is missing values.")
+            matched = values.str.upper().isin(
+                {str(value).strip().upper() for value in expected}
+            )
+        else:
+            raise ValueError(
+                f"Unsupported strong test/demo match type for {field}: {match_type}"
+            )
+        flagged = flagged | matched
+    return flagged
+
+
 def normalize_referrals(
     raw: pd.DataFrame,
     rules: dict[str, Any],
@@ -76,7 +113,26 @@ def normalize_referrals(
         booking_on_referral_source_norm=normalize_source(
             raw["booking_on_referral_source"]
         ),
-        referral_test_demo_flag=has_test_demo_name(raw, name_fields, pattern),
+    )
+    strong_signals = rules["filters"].get("strong_test_demo_signals", {}).get(
+        "referrals", []
+    )
+    strong_enabled = rules["filters"].get("strong_test_demo_enabled", False)
+    normalized = normalized.assign(
+        referral_test_demo_name_flag=has_test_demo_name(raw, name_fields, pattern),
+        # Keep strong signals as audit fields; the JSON switch controls exclusion.
+        referral_test_demo_strong_signal_flag=has_configured_test_demo_signal(
+            normalized, strong_signals
+        ),
+    ).assign(
+        referral_test_demo_flag=lambda frame: (
+            frame["referral_test_demo_name_flag"]
+            | (
+                frame["referral_test_demo_strong_signal_flag"]
+                if strong_enabled
+                else False
+            )
+        )
     )
 
     if normalized["referral_enquiry_id"].duplicated().any():
@@ -99,19 +155,40 @@ def normalize_bookings(
     normalized = raw.assign(
         client_name=clean_id(raw["Client name"]),
         booking_id=clean_id(raw["booking_id"]),
+        booking_crm_id=clean_id(raw["booking_crm_id"]),
         enquiry_id=clean_id(raw["enquiry_id"]),
         booking_date_at=parse_datetime(raw["bookingDate"]),
         booking_created_at=parse_datetime(raw["booking_created_on"]),
         booking_source_norm=normalize_source(raw["booking_source"]),
         enquiry_source_norm=normalize_source(raw["enquiry_source"]),
         booking_project_id=clean_id(raw["project_id"]),
+        booking_unit_number=clean_id(raw["unitNumber"]),
         booking_lead_id=clean_id(raw["lead_id"]),
         booking_mobile_key=clean_id(raw["mobileNumber"]),
         booking_email_key=clean_id(raw["email"]),
         agreement_value=pd.to_numeric(raw["agreementValue"], errors="coerce"),
-        booking_test_demo_flag=has_test_demo_name(raw, name_fields, pattern),
     )
-    # 规则表决定 booking 时间的 fallback 顺序和 honored source。
+    strong_signals = rules["filters"].get("strong_test_demo_signals", {}).get(
+        "bookings", []
+    )
+    strong_enabled = rules["filters"].get("strong_test_demo_enabled", False)
+    normalized = normalized.assign(
+        booking_test_demo_name_flag=has_test_demo_name(raw, name_fields, pattern),
+        # Keep strong signals as audit fields; the JSON switch controls exclusion.
+        booking_test_demo_strong_signal_flag=has_configured_test_demo_signal(
+            normalized, strong_signals
+        ),
+    ).assign(
+        booking_test_demo_flag=lambda frame: (
+            frame["booking_test_demo_name_flag"]
+            | (
+                frame["booking_test_demo_strong_signal_flag"]
+                if strong_enabled
+                else False
+            )
+        )
+    )
+    # The JSON rules define booking-time fallback and the strict honored source.
     timeline_fields = rules["time"]["booking_fallback_order"]
     missing_timeline_fields = [
         field for field in timeline_fields if field not in normalized.columns
@@ -153,7 +230,7 @@ def filter_test_demo(
     bookings: pd.DataFrame,
     enabled: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Apply the explicit test/demo filter and reconcile row counts."""
+    """Apply the active test/demo rule while retaining all audit flags."""
     if enabled:
         filtered_referrals = referrals.loc[~referrals["referral_test_demo_flag"]]
         filtered_bookings = bookings.loc[~bookings["booking_test_demo_flag"]]
@@ -161,28 +238,34 @@ def filter_test_demo(
         filtered_referrals = referrals
         filtered_bookings = bookings
 
+    def summary_row(
+        table: pd.DataFrame,
+        dataset: str,
+        prefix: str,
+        after_filter: int,
+    ) -> dict[str, int | str]:
+        name_flag = table[f"{prefix}_test_demo_name_flag"].fillna(False)
+        strong_flag = table[f"{prefix}_test_demo_strong_signal_flag"].fillna(False)
+        combined_flag = table[f"{prefix}_test_demo_flag"].fillna(False)
+        return {
+            "dataset": dataset,
+            "before_filter": len(table),
+            "name_pattern_only_flagged": int((name_flag & ~strong_flag).sum()),
+            "strong_signal_only_flagged": int((strong_flag & ~name_flag).sum()),
+            "flagged_by_both": int((name_flag & strong_flag).sum()),
+            "excluded_by_active_filter": int(combined_flag.sum()) if enabled else 0,
+            "after_filter": after_filter,
+        }
+
     summary = pd.DataFrame(
         [
-            {
-                "dataset": "Referral submissions",
-                "before_filter": len(referrals),
-                "test_demo_removed": int(
-                    referrals["referral_test_demo_flag"].sum()
-                )
-                if enabled
-                else 0,
-                "after_filter": len(filtered_referrals),
-            },
-            {
-                "dataset": "Bookings",
-                "before_filter": len(bookings),
-                "test_demo_removed": int(
-                    bookings["booking_test_demo_flag"].sum()
-                )
-                if enabled
-                else 0,
-                "after_filter": len(filtered_bookings),
-            },
+            summary_row(
+                referrals,
+                "Referral submissions",
+                "referral",
+                len(filtered_referrals),
+            ),
+            summary_row(bookings, "Bookings", "booking", len(filtered_bookings)),
         ]
     )
     return filtered_referrals, filtered_bookings, summary

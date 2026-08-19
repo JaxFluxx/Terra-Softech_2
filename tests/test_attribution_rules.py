@@ -85,10 +85,12 @@ def _raw_booking(source: str, enquiry_source: str = "DIRECT") -> pd.DataFrame:
             {
                 "Client name": "Client A",
                 "booking_id": "B1",
+                "booking_crm_id": "CRM-B1",
                 "enquiry_id": "E1",
                 "bookingDate": "2025-02-01",
                 "booking_created_on": "2025-01-31",
                 "booking_source": source,
+                "unitNumber": "A101",
                 "enquiry_source": enquiry_source,
                 "project_id": "P1",
                 "lead_id": "L1",
