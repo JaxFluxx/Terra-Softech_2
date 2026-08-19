@@ -23,6 +23,7 @@ from .funnel import (
     build_window_sensitivity,
 )
 from .io import load_source_tables, write_csv
+from .impact import build_impact_framing_summary, build_tier_b_agreement_context
 from .matching import (
     analyze_same_enquiry,
     build_secondary_identity_matches,
@@ -34,6 +35,11 @@ from .quality import (
     build_data_quality_summary,
     validate_primary_queue_integrity,
     validate_regression,
+)
+from .process_rules import (
+    build_multi_referrer_policy_case_matrix,
+    build_multi_referrer_policy_sensitivity,
+    build_process_window_and_policy_sensitivity,
 )
 from .run_tracking import RunTracker, default_run_id, utc_now
 
@@ -146,7 +152,7 @@ def run_pipeline(
         )
     referrals = normalize_referrals(referrals_raw, rules)
     bookings = normalize_bookings(bookings_raw, rules)
-    data_quality = build_data_quality_summary(referrals, bookings)
+    data_quality = build_data_quality_summary(referrals, bookings, rules=rules)
 
     filtered_referrals, filtered_bookings, filter_base = filter_test_demo(
         referrals,
@@ -154,11 +160,9 @@ def run_pipeline(
         enabled=rules["filters"]["test_demo_enabled"],
     )
 
-    # same-enquiry 质量检查保留 accepted package 的完整原始口径
-    # -> 记录级仍保留 test/demo 标记
-    # -> primary matching 继续使用过滤后数据
-    # JSON 是业务规则的唯一来源。
-    # -> 主匹配、时间 gate、honored source、secondary route 都从 rules 读取
+    # Keep same-enquiry integrity checks on the full normalized referral extract.
+    # Primary matching continues to use the filtered production-like slice.
+    # JSON is the runtime source for matching, time, honored, and identity rules.
     strict_sources = rules["honored"]["strict"]["accepted_values"]
     identity_rule = rules["identity"]["primary_route"]
     allow_same_day = rules["time"]["allow_referral_on_booking_date"]
@@ -218,6 +222,7 @@ def run_pipeline(
         tier_c_review,
         reverse_time,
         same_enquiry_valid,
+        rules=rules,
     )
 
     filter_impact = _build_filter_impact(
@@ -263,6 +268,28 @@ def run_pipeline(
         primary_matches,
     )
     multi_referrer = build_multi_referrer_diagnostic(primary_matches)
+    impact_framing = build_impact_framing_summary(
+        filtered_referrals,
+        filtered_bookings,
+        primary_matches,
+        primary_review,
+        tier_c_review,
+        reverse_time,
+        rules,
+    )
+    tier_b_agreement_context = build_tier_b_agreement_context(primary_review, rules)
+    multi_referrer_policy = build_multi_referrer_policy_sensitivity(
+        filtered_pairs,
+        rules,
+    )
+    multi_referrer_policy_case_matrix = build_multi_referrer_policy_case_matrix(
+        filtered_pairs,
+        rules,
+    )
+    process_window_and_policy = build_process_window_and_policy_sensitivity(
+        filtered_pairs,
+        rules,
+    )
     ops_board = build_ops_review_board(
         primary_review,
         tier_c_review,
@@ -283,6 +310,11 @@ def run_pipeline(
         "attribution_window_sensitivity.csv": window_sensitivity,
         "booking_source_summary.csv": source_diagnostic,
         "multi_referrer_summary.csv": multi_referrer,
+        "impact_framing_summary.csv": impact_framing,
+        "tier_b_agreement_context.csv": tier_b_agreement_context,
+        "multi_referrer_policy_sensitivity.csv": multi_referrer_policy,
+        "multi_referrer_policy_case_matrix.csv": multi_referrer_policy_case_matrix,
+        "process_window_and_policy_sensitivity.csv": process_window_and_policy,
         "ops_review_board.csv": ops_board,
     }
 
@@ -334,6 +366,7 @@ def run_pipeline(
         "bookings": bookings,
         "filtered_referrals": filtered_referrals,
         "filtered_bookings": filtered_bookings,
+        "filtered_pairs": filtered_pairs,
         "primary_matches": primary_matches,
         "primary_review": primary_review,
         "tier_c_review": tier_c_review,

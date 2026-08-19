@@ -1,7 +1,24 @@
 # Referral Bypass Change Log
 
-**Last updated:** 2026-08-06
-**Package status:** Week 5 reusable analytics system completed and validated
+**Last updated:** 2026-08-19
+**Package status:** Week 5/6 assignment alignment audit completed and validated
+
+## Week 5/6 Assignment Alignment Validation
+
+- Ran the full test suite: `24 passed`.
+- Regenerated all 16 derived CSV outputs through the documented pipeline
+  command.
+- Executed `code/6.1_impact_and_process.ipynb` from top to bottom with no
+  error outputs.
+- Confirmed the Week 6 deliverables: impact framing, Tier B value context,
+  four-policy sensitivity, the 30-day warning specification, decision memo,
+  metric dictionary, README guidance, and synthetic policy tests.
+- The default JSON contract preserves the accepted `12 eligible / 8 strict
+  honored / 4 primary review` baseline. The four review IDs remain `1206`,
+  `935`, `3331`, and `4913`.
+- Strong CRM-ID and unit-number signals are retained as visible data-quality
+  flags. When explicitly enabled, they run as a separately tested sensitivity
+  (`11 / 7 / 4`) and do not silently change the default primary funnel.
 
 ## JSON Runtime Rule Binding
 
@@ -264,3 +281,58 @@ The 4 primary records remain unchanged under 30-, 60-, 90-, and 180-day attribut
   assignment requires those audit and sensitivity views.
 - Removed the corresponding legacy export code and regression-test references.
   The active package remains fully regenerated from one pipeline command.
+
+## Week 6: Impact Framing and Multi-Referrer Process Design
+
+### Strong test/demo signal sensitivity
+
+- Added JSON-configured strong test/demo signals: `booking_crm_id` values
+  beginning with `DEMO-` and `unitNumber = TEST`.
+- The default active filter retains the accepted `12 / 8 / 4` contract and
+  excludes explicit name-pattern test/demo rows.
+- Five additional booking rows match the configured strong signals. They are
+  shown as data-quality flags by default and can be explicitly enabled as a
+  tested sensitivity, which produces `11 / 7 / 4`.
+- The primary review IDs remain `1206`, `935`, `3331`, and `4913`.
+- `tests/test_pipeline_regression.py` confirms the default baseline and the
+  explicitly enabled strong-signal sensitivity. This prevents silent drift in
+  either view.
+
+### Impact and value context
+
+- Added `impact_framing_summary.csv` with separate workload and conditional
+  quality denominators.
+- Added `tier_b_agreement_context.csv`; it flags repeated-digit and invalid
+  values without removing the attribution case or treating agreement value as
+  commission.
+- Added Tier B agreement-value sum, median, minimum, and maximum to the
+  impact framing table. These remain transaction context only.
+
+### Multi-referrer policy and product process
+
+- Added configurable policy scenarios P-LAST, P-FIRST, P-MANUAL, and
+  P-SAME-PROJECT-LAST.
+- Selected P-MANUAL as the 90-day provisional policy: a single prior referrer
+  may receive an owner candidate; two or more distinct prior referrers require
+  manual review.
+- Added the following reproducible outputs:
+  `multi_referrer_policy_sensitivity.csv`,
+  `multi_referrer_policy_case_matrix.csv`, and
+  `process_window_and_policy_sensitivity.csv`.
+- Added the baseline Tier B booking IDs for each tested process window and a
+  separate window-recomputed Tier B view. This distinguishes cases that would
+  trigger a warning from cases that still need a multi-referrer escalation.
+- Added a 30-day non-referral booking warning rule, decision table, and event
+  field contract. It is a soft-warning pilot; it does not automatically assign
+  payout or resolve cross-project ownership.
+
+### Validation and documentation
+
+- Added `tests/test_process_rules.py` for strong test signals, value sanity,
+  warning outcomes, and ownership policy behavior.
+- Added `log/multi_referrer_policy_brief.md` and
+  `log/process_rule_spec.md`; refreshed `log/decision_memo.md`, the metric
+  dictionary, README, and Week 6 notebook.
+- Preserved the Week 5 booking-first route, latest-prior selection, strict
+  honored definition, Tier honesty, reverse-time separation, and agreement
+  value boundary.

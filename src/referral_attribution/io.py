@@ -27,9 +27,11 @@ REQUIRED_REFERRAL_COLUMNS = {
 REQUIRED_BOOKING_COLUMNS = {
     "Client name",
     "booking_id",
+    "booking_crm_id",
     "bookingDate",
     "booking_created_on",
     "booking_source",
+    "unitNumber",
     "agreementValue",
     "enquiry_id",
     "enquiry_source",
@@ -104,6 +106,5 @@ def load_source_tables(raw_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict[
 def write_csv(table: pd.DataFrame, path: Path) -> None:
     """Write a deterministic CSV while preserving string IDs."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    # 固定浮点写出精度
-    # -> 避免不同 pandas 版本产生无业务意义的末位差异
+    # Keep CSV output stable across supported pandas versions.
     table.to_csv(path, index=False, float_format="%.12g")

@@ -5,6 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from .quality import evaluate_value_sanity
+
 
 def _classification_rules(rules: dict | None) -> dict:
     """Provide accepted labels when unit tests omit the full JSON config."""
@@ -115,17 +117,9 @@ def classify_secondary_matches(
     ).sort_values(["candidate_status", "booking_timeline_at"])
 
 
-def _value_sanity(series: pd.Series) -> pd.Series:
-    """Provide context on agreement value without treating it as impact."""
-    return pd.Series(
-        np.select(
-            [series.isna(), series.le(0)],
-            ["Not available", "Non-positive value"],
-            default="Positive contextual value",
-        ),
-        index=series.index,
-        dtype="string",
-    )
+def _value_sanity(series: pd.Series, rules: dict | None = None) -> pd.Series:
+    """Keep agreement value as context and surface quality flags."""
+    return evaluate_value_sanity(series, rules=rules)
 
 
 def build_ops_review_board(
@@ -168,7 +162,9 @@ def build_ops_review_board(
             "timeline_ambiguity_flag": primary_review[
                 "timeline_ambiguity_flag"
             ],
-            "value_sanity_flag": _value_sanity(primary_review["agreement_value"]),
+            "value_sanity_flag": _value_sanity(
+                primary_review["agreement_value"], rules=rules
+            ),
             "agreement_value": primary_review["agreement_value"],
             "review_reason": primary_review["review_reason"],
             "client_name": primary_review["client_name"],
@@ -213,7 +209,7 @@ def build_ops_review_board(
             ),
             "timeline_ambiguity_flag": False,
             "value_sanity_flag": _value_sanity(
-                secondary_review["agreement_value"]
+                secondary_review["agreement_value"], rules=rules
             ),
             "agreement_value": secondary_review["agreement_value"],
             "review_reason": secondary_review["review_reason"],
@@ -269,7 +265,7 @@ def build_ops_review_board(
         }
     )
 
-    # 对齐可空数值类型，保证不同 case class 拼接时类型稳定
+    # Align nullable numeric columns before concatenating case classes.
     frames = [reverse, primary, secondary]
     for frame in frames:
         for column in [

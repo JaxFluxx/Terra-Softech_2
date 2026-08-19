@@ -5,5 +5,8 @@ Duplicate referral enquiry IDs,0,Pass
 Duplicate booking IDs,0,Pass
 Referral rows with parsed submitted time,5448,Info
 Bookings with usable timeline,5275,Info
-Referral test/demo rows,863,Filtered
-Booking test/demo rows,562,Filtered
+Referral name-pattern test/demo rows,863,Filtered
+Referral strong-signal test/demo rows,0,Flagged
+Booking name-pattern test/demo rows,562,Filtered
+Booking strong-signal test/demo rows,10,Flagged
+Booking rows excluded by active test/demo filter,562,Filtered

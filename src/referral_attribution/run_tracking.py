@@ -105,7 +105,9 @@ class RunTracker:
             stat = path.stat()
             files.append(
                 {
-                    "relative_path": str(path.resolve().relative_to(self.project_root)),
+                    "relative_path": path.resolve()
+                    .relative_to(self.project_root)
+                    .as_posix(),
                     "size_bytes": stat.st_size,
                     "modified_at_utc": datetime.fromtimestamp(
                         stat.st_mtime,
@@ -217,4 +219,3 @@ class RunTracker:
             ),
             encoding="utf-8",
         )
-
